@@ -1,0 +1,19 @@
+{
+  "name": "hmmjs",
+  "version": "1.0.0",
+  "description": "JavaScript terrain mesh generation tool",
+  "main": "index.js",
+  "scripts": {
+    "test": "eslint *.js"
+  },
+  "eslintConfig": {
+    "extends": "mourner"
+  },
+  "keywords": ["terrain", "heightmap", "delaunay", "tin", "mesh"],
+  "author": "Vladimir Agafonkin",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^6.5.0",
+    "eslint-config-mourner": "^3.0.0"
+  }
+}
