@@ -1,5 +1,6 @@
 
 export default class HeightMesh {
+
     constructor(data, width, height = width) {
         this.data = data;
         this.width = width;
@@ -7,23 +8,28 @@ export default class HeightMesh {
     }
 
     run(maxError) {
-        const x0 = 0;
-        const y0 = 0;
-        const x1 = this.heightmap.width - 1;
-        const y1 = this.heightmap.width - 1;
-        const p0 = this._addPoint(x0, y0);
-        const p1 = this._addPoint(x1, y0);
-        const p2 = this._addPoint(x0, y1);
+        this._init();
+        while (this._error() > maxError) {
+            this._step();
+        }
+    }
+
+    _error() {
+        return this._errors[this._queue[0]];
+    }
+
+    _init() {
+        const x1 = this.width - 1;
+        const y1 = this.height - 1;
+        const p0 = this._addPoint(0, 0);
+        const p1 = this._addPoint(x1, 0);
+        const p2 = this._addPoint(0, y1);
         const p3 = this._addPoint(x1, y1);
 
         // add initial two triangles
         const t0 = this._addTriangle(p3, p0, p2, -1, -1, -1);
         this._addTriangle(p0, p3, p1, t0, -1, -1);
         this._flush();
-
-        while (this._errors[this._queue[0]] > maxError) {
-            this._step();
-        }
     }
 
     _flush() {
@@ -143,21 +149,25 @@ export default class HeightMesh {
         const p2 = this._triangles[e2];
 
         // FIXME flat points
-        const a = this._coords[p0];
-        const b = this._coords[p1];
-        const c = this._coords[p2];
-        const p = this._candidates[t];
+        const ax = this._coords[2 * p0];
+        const ay = this._coords[2 * p0 + 1];
+        const bx = this._coords[2 * p1];
+        const by = this._coords[2 * p1 + 1];
+        const cx = this._coords[2 * p2];
+        const cy = this._coords[2 * p2 + 1];
+        const px = this._candidates[2 * t];
+        const py = this._candidates[2 * t + 1];
 
-        const pn = this._addPoint(p);
+        const pn = this._addPoint(px, py);
 
         // FIXME flat points
-        if (collinear(a, b, p)) {
+        if (collinear(ax, ay, bx, by, px, py)) {
             this._handleCollinear(pn, e0);
 
-        } else if (collinear(b, c, p)) {
+        } else if (collinear(bx, by, cx, cy, px, py)) {
             this._handleCollinear(pn, e1);
 
-        } else if (collinear(c, a, p)) {
+        } else if (collinear(cx, cy, ax, ay, px, py)) {
             this._handleCollinear(pn, e2);
 
         } else {
@@ -175,6 +185,12 @@ export default class HeightMesh {
         }
 
         this._flush();
+    }
+
+    _addPoint(x, y) {
+        const i = this._coords.length >> 1;
+        this._coords.push(x, y);
+        return i;
     }
 
     _addTriangle(a, b, c, ab, bc, ca) {
