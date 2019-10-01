@@ -5,6 +5,16 @@ export default class HeightMesh {
         this.data = data;
         this.width = width;
         this.height = height;
+
+        this._coords = [];
+        this._triangles = [];
+        this._halfedges = [];
+        this._candidates = [];
+        this._errors = [];
+        this._queueIndexes = [];
+        this._queue = [];
+        this._pending = new Uint32Array(64);
+        this._pendingLen = 0;
     }
 
     run(maxError) {
@@ -34,14 +44,15 @@ export default class HeightMesh {
 
     _flush() {
         const coords = this._coords;
-        while (this._pending.length) {
+        for (let i = 0; i < this._pendingLen; i++) {
+            const t = this._pending[i];
             // rasterize triangle to find maximum pixel error
-            const t = this._pending.pop();
             const a = 2 * this._triangles[t * 3 + 0];
             const b = 2 * this._triangles[t * 3 + 1];
             const c = 2 * this._triangles[t * 3 + 2];
-            this._findCandidate(coords[a], coords[a + 1], coords[b], coords[b + 1], coords[c], coords[c + 1]);
+            this._findCandidate(coords[a], coords[a + 1], coords[b], coords[b + 1], coords[c], coords[c + 1], t);
         }
+        this._pendingLen = 0;
     }
 
     _at(x, y) {
@@ -80,13 +91,13 @@ export default class HeightMesh {
             // compute starting offset
             let dx = 0;
             if (w00 < 0 && a12 !== 0) {
-                dx = Math.max(dx, -w00 / a12);
+                dx = Math.max(dx, Math.floor(-w00 / a12));
             }
             if (w01 < 0 && a20 !== 0) {
-                dx = Math.max(dx, -w01 / a20);
+                dx = Math.max(dx, Math.floor(-w01 / a20));
             }
             if (w02 < 0 && a01 !== 0) {
-                dx = Math.max(dx, -w02 / a01);
+                dx = Math.max(dx, Math.floor(-w02 / a01));
             }
 
             let w0 = w00 + a12 * dx;
@@ -148,7 +159,6 @@ export default class HeightMesh {
         const p1 = this._triangles[e1];
         const p2 = this._triangles[e2];
 
-        // FIXME flat points
         const ax = this._coords[2 * p0];
         const ay = this._coords[2 * p0 + 1];
         const bx = this._coords[2 * p1];
@@ -160,7 +170,6 @@ export default class HeightMesh {
 
         const pn = this._addPoint(px, py);
 
-        // FIXME flat points
         if (collinear(ax, ay, bx, by, px, py)) {
             this._handleCollinear(pn, e0);
 
@@ -183,7 +192,6 @@ export default class HeightMesh {
             this._legalize(t1);
             this._legalize(t2);
         }
-
         this._flush();
     }
 
@@ -195,7 +203,7 @@ export default class HeightMesh {
 
     _addTriangle(a, b, c, ab, bc, ca) {
         // new triangle index
-        const t = this._candidates.length;
+        const t = this._candidates.length >> 1;
         // new halfedge index
         const e = this._triangles.length;
         // add triangle vertices
@@ -217,7 +225,7 @@ export default class HeightMesh {
         this._errors.push(0);
         this._queueIndexes.push(-1);
         // add triangle to pending queue for later rasterization
-        this._pending.push(t);
+        this._pending[this._pendingLen++] = t;
         // return first halfedge index
         return e;
     }
@@ -269,8 +277,8 @@ export default class HeightMesh {
         const hbl = this._halfedges[bl];
         const hbr = this._halfedges[br];
 
-        this._queueRemove(a / 3);
-        this._queueRemove(b / 3);
+        this._queueRemove(a0 / 3);
+        this._queueRemove(b0 / 3);
 
         const t0 = this._addTriangle(p0, p1, pl, -1, hbl, hal);
         const t1 = this._addTriangle(p1, p0, pr, t0, har, hbr);
@@ -306,7 +314,7 @@ export default class HeightMesh {
         const hbl = this._halfedges[bl];
         const hbr = this._halfedges[br];
 
-        this._queueRemove(b / 3);
+        this._queueRemove(b0 / 3);
 
         const t0 = this._addTriangle(p0, pr, pn, har, -1, -1);
         const t1 = this._addTriangle(pr, p1, pn, hbr, -1, t0 + 1);
@@ -342,14 +350,13 @@ export default class HeightMesh {
     }
 
     _queueRemove(t) {
-        const i = this._queueIndices[t];
+        const i = this._queueIndexes[t];
         if (i < 0) {
             const it = this._pending.indexOf(t);
             if (it !== -1) {
-                this._pending[it] = this._pending.pop();
+                this._pending[it] = this._pending[--this._pendingLen];
             } else {
-                // this shouldn't happen!
-                throw new Error();
+                throw new Error('Broken triangulation (something went wrong).');
             }
             return;
         }

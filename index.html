@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>hmmjs</title>
+<style>
+    #canvas { border: 1px solid #ccc; }
+</style>
+</head>
+<body>
+<canvas id="canvas" width="512" height="512"></canvas><br>
+<div id="info"></div>
+<button id="start">Start</button>
+<script type="module">
+
+import HeightMesh from './index.js';
+
+const canvas = document.getElementById('canvas');
+const ctx = window.ctx = canvas.getContext('2d');
+
+const size = 512;
+
+canvas.width = 2 * size;
+canvas.height = 2 * size;
+canvas.style.width = `${size}px`;
+canvas.style.height = `${size}px`;
+ctx.scale(2, 2);
+
+let hm;
+
+document.getElementById('start').onclick = (e) => {
+    frame();
+    e.target.parentNode.removeChild(e.target);
+}
+
+const tile = new Image();
+tile.src = 'test/fixtures/14-2625-6369.png';
+tile.onload = () => {
+    const data = getImageData(tile);
+    const heights = new Float64Array(size * size);
+    for (let i = 0; i < heights.length; i++) {
+        const r = data[4 * i];
+        const g = data[4 * i + 1];
+        const b = data[4 * i + 2];
+        heights[i] = Math.round(((r * 256 * 256 + g * 256.0 + b) / 10.0 - 10000.0) * 10) / 10;
+    }
+    hm = window.hm = new HeightMesh(heights, size, size);
+    console.time('hm');
+    hm.run(0.2);
+    console.timeEnd('hm');
+    drawTIN(hm);
+    // hm._init();
+};
+
+function getImageData(img) {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(tile, 0, 0);
+    return ctx.getImageData(0, 0, img.width, img.height).data;
+}
+
+// function frame() {
+//     console.time('100');
+//     for (let i = 0; i < 100; i++) hm._step();
+//     console.timeEnd('100');
+//     drawTIN(hm);
+//     requestAnimationFrame(frame);
+// };
+
+function drawTIN(hm) {
+    ctx.clearRect(0, 0, size, size);
+    ctx.lineWidth = 0.5;
+
+    const t = hm._queue[0];
+    const a = 2 * hm._triangles[3 * t + 0];
+    const b = 2 * hm._triangles[3 * t + 1];
+    const c = 2 * hm._triangles[3 * t + 2];
+    ctx.beginPath();
+    ctx.moveTo(hm._coords[a], hm._coords[a + 1]);
+    ctx.lineTo(hm._coords[b], hm._coords[b + 1]);
+    ctx.lineTo(hm._coords[c], hm._coords[c + 1]);
+    ctx.closePath();
+    ctx.fillStyle = 'yellow';
+    ctx.fill();
+
+    ctx.beginPath();
+    for (const t of hm._queue) {
+        const a = 2 * hm._triangles[3 * t + 0];
+        const b = 2 * hm._triangles[3 * t + 1];
+        const c = 2 * hm._triangles[3 * t + 2];
+        ctx.moveTo(hm._coords[a], hm._coords[a + 1]);
+        ctx.lineTo(hm._coords[b], hm._coords[b + 1]);
+        ctx.lineTo(hm._coords[c], hm._coords[c + 1]);
+        ctx.closePath();
+    }
+    ctx.stroke();
+    // for (let i = hm._queue.length - 1; i >= 0; i--) {
+    //     const t = hm._queue[i];
+    //     const x = hm._candidates[2 * t];
+    //     const y = hm._candidates[2 * t + 1];
+    //     ctx.fillStyle = i === 0 ? 'red' : 'blue';
+    //     ctx.fillRect(x - 2, y - 2, 4, 4);
+    // }
+    document.getElementById('info').innerHTML = `${hm._coords.length / 2} points, ${hm._error().toFixed(2)}m error`;
+}
+
+function edge(ax, ay, bx, by, cx, cy) {
+    return (bx - cx) * (ay - cy) - (by - cy) * (ax - cx);
+}
+
+window.drawTIN = drawTIN;
+
+</script>
+</body>
+</html>
