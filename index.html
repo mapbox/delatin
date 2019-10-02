@@ -37,18 +37,21 @@ tile.src = 'test/fixtures/14-2625-6369.png';
 tile.onload = () => {
     const data = getImageData(tile);
     const heights = new Float64Array(size * size);
+    let minHeight = Infinity;
+    let maxHeight = -Infinity;
     for (let i = 0; i < heights.length; i++) {
         const r = data[4 * i];
         const g = data[4 * i + 1];
         const b = data[4 * i + 2];
         heights[i] = Math.round(((r * 256 * 256 + g * 256.0 + b) / 10.0 - 10000.0) * 10) / 10;
+        minHeight = Math.min(minHeight, heights[i]);
+        maxHeight = Math.max(maxHeight, heights[i]);
     }
     hm = window.hm = new HeightMesh(heights, size, size);
-    console.time('hm');
-    hm.run(0.2);
-    console.timeEnd('hm');
+
+    hm._init();
     drawTIN(hm);
-    // hm._init();
+    frame();
 };
 
 function getImageData(img) {
@@ -60,29 +63,50 @@ function getImageData(img) {
     return ctx.getImageData(0, 0, img.width, img.height).data;
 }
 
-// function frame() {
-//     console.time('100');
-//     for (let i = 0; i < 100; i++) hm._step();
-//     console.timeEnd('100');
-//     drawTIN(hm);
-//     requestAnimationFrame(frame);
-// };
+function frame() {
+    hm._step();
+
+    ctx.beginPath();
+    for (let i = 0; i < hm._pendingLen; i++) {
+        const t = hm._pending[i];
+        const a = 2 * hm._triangles[3 * t + 0];
+        const b = 2 * hm._triangles[3 * t + 1];
+        const c = 2 * hm._triangles[3 * t + 2];
+        ctx.moveTo(hm._coords[a], hm._coords[a + 1]);
+        ctx.lineTo(hm._coords[b], hm._coords[b + 1]);
+        ctx.lineTo(hm._coords[c], hm._coords[c + 1]);
+        ctx.closePath();
+    }
+    ctx.fill();
+    ctx.stroke();
+
+    hm._flush();
+
+    document.getElementById('info').innerHTML = `${hm._coords.length / 2} points, ${hm._error().toFixed(2)}m error`;
+
+    requestAnimationFrame(frame);
+};
 
 function drawTIN(hm) {
-    ctx.clearRect(0, 0, size, size);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, size, size);
     ctx.lineWidth = 0.5;
 
-    const t = hm._queue[0];
-    const a = 2 * hm._triangles[3 * t + 0];
-    const b = 2 * hm._triangles[3 * t + 1];
-    const c = 2 * hm._triangles[3 * t + 2];
-    ctx.beginPath();
-    ctx.moveTo(hm._coords[a], hm._coords[a + 1]);
-    ctx.lineTo(hm._coords[b], hm._coords[b + 1]);
-    ctx.lineTo(hm._coords[c], hm._coords[c + 1]);
-    ctx.closePath();
-    ctx.fillStyle = 'yellow';
-    ctx.fill();
+    // for (let i = 0; i < hm._coords.length; i += 2) {
+    //     ctx.fillRect(hm._coords[i], hm._coords[i + 1], 2, 2);
+    // }
+
+    // const t = hm._queue[0];
+    // const a = 2 * hm._triangles[3 * t + 0];
+    // const b = 2 * hm._triangles[3 * t + 1];
+    // const c = 2 * hm._triangles[3 * t + 2];
+    // ctx.beginPath();
+    // ctx.moveTo(hm._coords[a], hm._coords[a + 1]);
+    // ctx.lineTo(hm._coords[b], hm._coords[b + 1]);
+    // ctx.lineTo(hm._coords[c], hm._coords[c + 1]);
+    // ctx.closePath();
+    // ctx.fillStyle = 'yellow';
+    // ctx.fill();
 
     ctx.beginPath();
     for (const t of hm._queue) {

@@ -6,14 +6,17 @@ export default class HeightMesh {
         this.width = width;
         this.height = height;
 
-        this._coords = [];
+        this._coords = []; // vertex coordinates (x, y)
+
+        // triangle data
         this._triangles = [];
         this._halfedges = [];
         this._candidates = [];
         this._errors = [];
         this._queueIndexes = [];
-        this._queue = [];
-        this._pending = new Uint32Array(64);
+
+        this._queue = []; // queue of added triangles
+        this._pending = []; // triangles pending addition to queue
         this._pendingLen = 0;
     }
 
@@ -21,11 +24,21 @@ export default class HeightMesh {
         this._init();
         while (this._error() > maxError) {
             this._step();
+            this._flush();
         }
     }
 
     _error() {
         return this._errors[this._queue[0]];
+    }
+
+    _rmse() {
+        let sum = 0;
+        for (const t of this._queue) {
+            const e = this._errors[t];
+            sum += e * e;
+        }
+        return Math.sqrt(sum / this._queue.length);
     }
 
     _init() {
@@ -84,6 +97,7 @@ export default class HeightMesh {
         const z2 = this._at(p2x, p2y) / a;
 
         // iterate over pixels in bounding box
+        let numScanned = 0;
         let maxError = 0;
         let mx = 0;
         let my = 0;
@@ -110,6 +124,7 @@ export default class HeightMesh {
                 // check if inside triangle
                 if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
                     wasInside = true;
+                    numScanned++;
 
                     // compute z using barycentric coordinates
                     const z = z0 * w0 + z1 * w1 + z2 * w2;
@@ -184,7 +199,7 @@ export default class HeightMesh {
             const h1 = this._halfedges[e1];
             const h2 = this._halfedges[e2];
 
-            const t0 = this._addTriangle(p0, p1, pn, h0, -1, -1);
+            const t0 = this._addTriangle(p0, p1, pn, h0, -1, -1, e0);
             const t1 = this._addTriangle(p1, p2, pn, h1, -1, t0 + 1);
             const t2 = this._addTriangle(p2, p0, pn, h2, t0 + 2, t1 + 1);
 
@@ -192,7 +207,6 @@ export default class HeightMesh {
             this._legalize(t1);
             this._legalize(t2);
         }
-        this._flush();
     }
 
     _addPoint(x, y) {
@@ -201,15 +215,19 @@ export default class HeightMesh {
         return i;
     }
 
-    _addTriangle(a, b, c, ab, bc, ca) {
-        // new triangle index
-        const t = this._candidates.length >> 1;
-        // new halfedge index
-        const e = this._triangles.length;
+    _addTriangle(a, b, c, ab, bc, ca, e = this._triangles.length) {
+        const t = e / 3; // new triangle index
+
         // add triangle vertices
-        this._triangles.push(a, b, c);
+        this._triangles[e + 0] = a;
+        this._triangles[e + 1] = b;
+        this._triangles[e + 2] = c;
+
         // add triangle halfedges
-        this._halfedges.push(ab, bc, ca);
+        this._halfedges[e + 0] = ab;
+        this._halfedges[e + 1] = bc;
+        this._halfedges[e + 2] = ca;
+
         // link neighboring halfedges
         if (ab >= 0) {
             this._halfedges[ab] = e + 0;
@@ -220,12 +238,16 @@ export default class HeightMesh {
         if (ca >= 0) {
             this._halfedges[ca] = e + 2;
         }
-        // add triangle metadata
-        this._candidates.push(0, 0);
-        this._errors.push(0);
-        this._queueIndexes.push(-1);
+
+        // init triangle metadata
+        this._candidates[2 * t + 0] = 0;
+        this._candidates[2 * t + 1] = 0;
+        this._errors[t] = 0;
+        this._queueIndexes[t] = -1;
+
         // add triangle to pending queue for later rasterization
         this._pending[this._pendingLen++] = t;
+
         // return first halfedge index
         return e;
     }
@@ -280,8 +302,8 @@ export default class HeightMesh {
         this._queueRemove(a0 / 3);
         this._queueRemove(b0 / 3);
 
-        const t0 = this._addTriangle(p0, p1, pl, -1, hbl, hal);
-        const t1 = this._addTriangle(p1, p0, pr, t0, har, hbr);
+        const t0 = this._addTriangle(p0, p1, pl, -1, hbl, hal, a0);
+        const t1 = this._addTriangle(p1, p0, pr, t0, har, hbr, b0);
 
         this._legalize(t0 + 1);
         this._legalize(t1 + 2);
@@ -300,7 +322,7 @@ export default class HeightMesh {
         const b = this._halfedges[a];
 
         if (b < 0) {
-            const t0 = this._addTriangle(pn, p0, pr, -1, har, -1);
+            const t0 = this._addTriangle(pn, p0, pr, -1, har, -1, a0);
             const t1 = this._addTriangle(p0, pn, pl, t0, -1, hal);
             this._legalize(t0 + 1);
             this._legalize(t1 + 2);
@@ -316,8 +338,8 @@ export default class HeightMesh {
 
         this._queueRemove(b0 / 3);
 
-        const t0 = this._addTriangle(p0, pr, pn, har, -1, -1);
-        const t1 = this._addTriangle(pr, p1, pn, hbr, -1, t0 + 1);
+        const t0 = this._addTriangle(p0, pr, pn, har, -1, -1, a0);
+        const t1 = this._addTriangle(pr, p1, pn, hbr, -1, t0 + 1, b0);
         const t2 = this._addTriangle(p1, pl, pn, hbl, -1, t1 + 1);
         const t3 = this._addTriangle(pl, p0, pn, hal, t0 + 2, t2 + 1);
 
