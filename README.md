@@ -6,6 +6,17 @@ Delatin is a port of [hmm](https://github.com/fogleman/hmm) (C++), which is in t
 
 ## [Live Demo](https://mapbox.github.io/delatin/)
 
+[![](delatin.png)](https://mapbox.github.io/delatin/)
+
+## Example
+
+```js
+const tin = new Delatin(heights, width, height);
+
+tin.run(0.3); // run mesh refinement until max error is less than 0.3
+const {coords, triangles} = tin; // get vertices and triangles of the mesh
+````
+
 ## API
 
 #### `new Delatin(heights, width, height)`
@@ -35,14 +46,3 @@ After running mesh refinement, this will be an array of `x, y` vertex coordinate
 #### `tin.triangles`
 
 After running mesh refinement, this will be an an array of triangle indices of the final mesh. Each triple of numbers defines a triangle and references vertices in the `tin.coords` array.
-
-## Example
-
-```js
-const tin = new Delatin(heights, width, height);
-
-tin.run(0.3); // run mesh refinement until max error is less than 0.3
-
-// get vertex coordinates and triangles of the mesh
-const {coords, triangles} = tin;
-````
