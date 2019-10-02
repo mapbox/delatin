@@ -6,14 +6,14 @@ export default class Delatin {
         this.width = width;
         this.height = height;
 
-        this._coords = []; // vertex coordinates (x, y)
+        this.coords = []; // vertex coordinates (x, y)
+        this.triangles = []; // mesh triangle indices
 
-        // triangle data
-        this._triangles = [];
+        // additional triangle data
         this._halfedges = [];
         this._candidates = [];
         this._errors = [];
-        this._queueIndexes = [];
+        this._queueIndices = [];
 
         this._queue = []; // queue of added triangles
         this._pending = []; // triangles pending addition to queue
@@ -22,7 +22,7 @@ export default class Delatin {
         this._init();
     }
 
-    run(maxError) {
+    run(maxError = 1) {
         while (this.getMaxError() > maxError) {
             this._step();
             this._flush();
@@ -37,6 +37,10 @@ export default class Delatin {
         let sum = 0;
         for (const e of this._errors) sum += e * e;
         return Math.sqrt(sum / this._errors.length);
+    }
+
+    heightAt(x, y) {
+        return this.data[this.width * y + x];
     }
 
     _init() {
@@ -54,20 +58,16 @@ export default class Delatin {
     }
 
     _flush() {
-        const coords = this._coords;
+        const coords = this.coords;
         for (let i = 0; i < this._pendingLen; i++) {
             const t = this._pending[i];
             // rasterize triangle to find maximum pixel error
-            const a = 2 * this._triangles[t * 3 + 0];
-            const b = 2 * this._triangles[t * 3 + 1];
-            const c = 2 * this._triangles[t * 3 + 2];
+            const a = 2 * this.triangles[t * 3 + 0];
+            const b = 2 * this.triangles[t * 3 + 1];
+            const c = 2 * this.triangles[t * 3 + 2];
             this._findCandidate(coords[a], coords[a + 1], coords[b], coords[b + 1], coords[c], coords[c + 1], t);
         }
         this._pendingLen = 0;
-    }
-
-    _at(x, y) {
-        return this.data[this.width * y + x];
     }
 
     _findCandidate(p0x, p0y, p1x, p1y, p2x, p2y, t) {
@@ -90,9 +90,9 @@ export default class Delatin {
 
         // pre-multiplied z values at vertices
         const a = orient(p0x, p0y, p1x, p1y, p2x, p2y);
-        const z0 = this._at(p0x, p0y) / a;
-        const z1 = this._at(p1x, p1y) / a;
-        const z2 = this._at(p2x, p2y) / a;
+        const z0 = this.heightAt(p0x, p0y) / a;
+        const z1 = this.heightAt(p1x, p1y) / a;
+        const z2 = this.heightAt(p2x, p2y) / a;
 
         // iterate over pixels in bounding box
         let maxError = 0;
@@ -124,7 +124,7 @@ export default class Delatin {
 
                     // compute z using barycentric coordinates
                     const z = z0 * w0 + z1 * w1 + z2 * w2;
-                    const dz = Math.abs(z - this._at(x, y));
+                    const dz = Math.abs(z - this.heightAt(x, y));
                     if (dz > maxError) {
                         maxError = dz;
                         mx = x;
@@ -166,16 +166,16 @@ export default class Delatin {
         const e1 = t * 3 + 1;
         const e2 = t * 3 + 2;
 
-        const p0 = this._triangles[e0];
-        const p1 = this._triangles[e1];
-        const p2 = this._triangles[e2];
+        const p0 = this.triangles[e0];
+        const p1 = this.triangles[e1];
+        const p2 = this.triangles[e2];
 
-        const ax = this._coords[2 * p0];
-        const ay = this._coords[2 * p0 + 1];
-        const bx = this._coords[2 * p1];
-        const by = this._coords[2 * p1 + 1];
-        const cx = this._coords[2 * p2];
-        const cy = this._coords[2 * p2 + 1];
+        const ax = this.coords[2 * p0];
+        const ay = this.coords[2 * p0 + 1];
+        const bx = this.coords[2 * p1];
+        const by = this.coords[2 * p1 + 1];
+        const cx = this.coords[2 * p2];
+        const cy = this.coords[2 * p2 + 1];
         const px = this._candidates[2 * t];
         const py = this._candidates[2 * t + 1];
 
@@ -206,18 +206,18 @@ export default class Delatin {
     }
 
     _addPoint(x, y) {
-        const i = this._coords.length >> 1;
-        this._coords.push(x, y);
+        const i = this.coords.length >> 1;
+        this.coords.push(x, y);
         return i;
     }
 
-    _addTriangle(a, b, c, ab, bc, ca, e = this._triangles.length) {
+    _addTriangle(a, b, c, ab, bc, ca, e = this.triangles.length) {
         const t = e / 3; // new triangle index
 
         // add triangle vertices
-        this._triangles[e + 0] = a;
-        this._triangles[e + 1] = b;
-        this._triangles[e + 2] = c;
+        this.triangles[e + 0] = a;
+        this.triangles[e + 1] = b;
+        this.triangles[e + 2] = c;
 
         // add triangle halfedges
         this._halfedges[e + 0] = ab;
@@ -239,7 +239,7 @@ export default class Delatin {
         this._candidates[2 * t + 0] = 0;
         this._candidates[2 * t + 1] = 0;
         this._errors[t] = 0;
-        this._queueIndexes[t] = -1;
+        this._queueIndices[t] = -1;
 
         // add triangle to pending queue for later rasterization
         this._pending[this._pendingLen++] = t;
@@ -276,11 +276,11 @@ export default class Delatin {
         const ar = a0 + (a + 2) % 3;
         const bl = b0 + (b + 2) % 3;
         const br = b0 + (b + 1) % 3;
-        const p0 = this._triangles[ar];
-        const pr = this._triangles[a];
-        const pl = this._triangles[al];
-        const p1 = this._triangles[bl];
-        const coords = this._coords;
+        const p0 = this.triangles[ar];
+        const pr = this.triangles[a];
+        const pl = this.triangles[al];
+        const p1 = this.triangles[bl];
+        const coords = this.coords;
 
         if (!inCircle(
             coords[2 * p0], coords[2 * p0 + 1],
@@ -309,9 +309,9 @@ export default class Delatin {
         const a0 = a - a % 3;
         const al = a0 + (a + 1) % 3;
         const ar = a0 + (a + 2) % 3;
-        const p0 = this._triangles[ar];
-        const pr = this._triangles[a];
-        const pl = this._triangles[al];
+        const p0 = this.triangles[ar];
+        const pr = this.triangles[a];
+        const pl = this.triangles[al];
         const hal = this._halfedges[al];
         const har = this._halfedges[ar];
 
@@ -328,7 +328,7 @@ export default class Delatin {
         const b0 = b - b % 3;
         const bl = b0 + (b + 2) % 3;
         const br = b0 + (b + 1) % 3;
-        const p1 = this._triangles[bl];
+        const p1 = this.triangles[bl];
         const hbl = this._halfedges[bl];
         const hbr = this._halfedges[br];
 
@@ -349,7 +349,7 @@ export default class Delatin {
 
     _queuePush(t) {
         const i = this._queue.length;
-        this._queueIndexes[t] = i;
+        this._queueIndices[t] = i;
         this._queue.push(t);
         this._queueUp(i);
     }
@@ -363,12 +363,12 @@ export default class Delatin {
 
     _queuePopBack() {
         const t = this._queue.pop();
-        this._queueIndexes[t] = -1;
+        this._queueIndices[t] = -1;
         return t;
     }
 
     _queueRemove(t) {
-        const i = this._queueIndexes[t];
+        const i = this._queueIndices[t];
         if (i < 0) {
             const it = this._pending.indexOf(t);
             if (it !== -1) {
@@ -397,8 +397,8 @@ export default class Delatin {
         const pj = this._queue[j];
         this._queue[i] = pj;
         this._queue[j] = pi;
-        this._queueIndexes[pi] = j;
-        this._queueIndexes[pj] = i;
+        this._queueIndices[pi] = j;
+        this._queueIndices[pj] = i;
     }
 
     _queueUp(j0) {

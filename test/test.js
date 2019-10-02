@@ -14,14 +14,14 @@ test('runs according to max error', (t) => {
     tin.run(10);
 
     t.ok(tin.getMaxError() <= 10, 'max error within threshold');
-    t.equals(tin._coords.length / 2, 190, 'number of points');
-    t.equals(tin._triangles.length / 3, 348, 'number of triangles');
+    t.equals(tin.coords.length / 2, 190, 'number of points');
+    t.equals(tin.triangles.length / 3, 348, 'number of triangles');
 
     tin.run(0.2);
 
     t.ok(tin.getMaxError() <= 0.2, 'max error within threshold');
-    t.equals(tin._coords.length / 2, 16257, 'number of points');
-    t.equals(tin._triangles.length / 3, 32147, 'number of triangles');
+    t.equals(tin.coords.length / 2, 16257, 'number of points');
+    t.equals(tin.triangles.length / 3, 32147, 'number of triangles');
 
     t.end();
 });

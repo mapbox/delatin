@@ -109,7 +109,7 @@ function getImageData(img) {
 
 function frame() {
     const scale = 3 / metersPerPixel;
-    const numPoints = tin._coords.length / 2;
+    const numPoints = tin.coords.length / 2;
     const speed = +speedEl.value;
     const iterations = speed - numPoints % speed;
 
@@ -118,12 +118,12 @@ function frame() {
         tin._step();
         for (let i = 0; i < tin._pendingLen; i++) {
             const t = tin._pending[i];
-            const p0 = 2 * tin._triangles[3 * t + 0];
-            const p1 = 2 * tin._triangles[3 * t + 1];
-            const p2 = 2 * tin._triangles[3 * t + 2];
-            const x0 = tin._coords[p0], y0 = tin._coords[p0 + 1], z0 = tin._at(x0, y0) * scale;
-            const x1 = tin._coords[p1], y1 = tin._coords[p1 + 1], z1 = tin._at(x1, y1) * scale;
-            const x2 = tin._coords[p2], y2 = tin._coords[p2 + 1], z2 = tin._at(x2, y2) * scale;
+            const p0 = 2 * tin.triangles[3 * t + 0];
+            const p1 = 2 * tin.triangles[3 * t + 1];
+            const p2 = 2 * tin.triangles[3 * t + 2];
+            const x0 = tin.coords[p0], y0 = tin.coords[p0 + 1], z0 = tin.heightAt(x0, y0) * scale;
+            const x1 = tin.coords[p1], y1 = tin.coords[p1 + 1], z1 = tin.heightAt(x1, y1) * scale;
+            const x2 = tin.coords[p2], y2 = tin.coords[p2 + 1], z2 = tin.heightAt(x2, y2) * scale;
             pending.push({x0, y0, z0, x1, y1, z1, x2, y2, z2});
         }
         tin._flush();
