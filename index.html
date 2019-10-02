@@ -121,14 +121,14 @@ const tileCoord = '14/2625/6369';
 function start() {
     cancelAnimationFrame(frameId);
     const data = getImageData(tile);
-    const heights = new Float64Array(tile.width * tile.height);
-    for (let i = 0; i < heights.length; i++) {
+    const values = new Float64Array(tile.width * tile.height);
+    for (let i = 0; i < values.length; i++) {
         const r = data[4 * i];
         const g = data[4 * i + 1];
         const b = data[4 * i + 2];
-        heights[i] = Math.round(((r * 256 * 256 + g * 256.0 + b) / 10.0 - 10000.0) * 10) / 10;
+        values[i] = Math.round(((r * 256 * 256 + g * 256.0 + b) / 10.0 - 10000.0) * 10) / 10;
     }
-    tin = window.tin = new Delatin(heights, tile.width, tile.height);
+    tin = window.tin = new Delatin(values, tile.width, tile.height);
     frame();
 }
 

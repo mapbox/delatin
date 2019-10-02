@@ -11,7 +11,7 @@ Delatin is a port of Michael Fogleman's [*hmm*](https://github.com/fogleman/hmm)
 ## Example
 
 ```js
-const tin = new Delatin(heights, width, height);
+const tin = new Delatin(heightValues, width, height);
 
 tin.run(0.3); // run mesh refinement until max error is less than 0.3
 const {coords, triangles} = tin; // get vertices and triangles of the mesh
@@ -19,7 +19,7 @@ const {coords, triangles} = tin; // get vertices and triangles of the mesh
 
 ## API
 
-#### `new Delatin(heights, width, height)`
+#### `new Delatin(heightValues, width, height)`
 
 Creates a new Delatin instance given a height field in the form of a flat array of numbers (with `width * height` length).
 
@@ -37,7 +37,7 @@ Returns the current [root-mean-square deviation](https://en.wikipedia.org/wiki/R
 
 #### `tin.heightAt(x, y)`
 
-Returns the height value at position `x`, `y`.
+Returns the height value at a given position, with `x`, `y` being integer coordinates that reference the original height field.
 
 #### `tin.coords`
 
