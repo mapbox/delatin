@@ -80,9 +80,9 @@ export default class HeightMesh {
         const maxY = Math.max(p0y, p1y, p2y);
 
         // forward differencing variables
-        let w00 = edge(p1x, p1y, p2x, p2y, minX, minY);
-        let w01 = edge(p2x, p2y, p0x, p0y, minX, minY);
-        let w02 = edge(p0x, p0y, p1x, p1y, minX, minY);
+        let w00 = orient(p1x, p1y, p2x, p2y, minX, minY);
+        let w01 = orient(p2x, p2y, p0x, p0y, minX, minY);
+        let w02 = orient(p0x, p0y, p1x, p1y, minX, minY);
         const a01 = p1y - p0y;
         const b01 = p0x - p1x;
         const a12 = p2y - p1y;
@@ -91,7 +91,7 @@ export default class HeightMesh {
         const b20 = p2x - p0x;
 
         // pre-multiplied z values at vertices
-        const a = edge(p0x, p0y, p1x, p1y, p2x, p2y);
+        const a = orient(p0x, p0y, p1x, p1y, p2x, p2y);
         const z0 = this._at(p0x, p0y) / a;
         const z1 = this._at(p1x, p1y) / a;
         const z2 = this._at(p2x, p2y) / a;
@@ -183,13 +183,13 @@ export default class HeightMesh {
 
         const pn = this._addPoint(px, py);
 
-        if (collinear(ax, ay, bx, by, px, py)) {
+        if (orient(ax, ay, bx, by, px, py) === 0) {
             this._handleCollinear(pn, e0);
 
-        } else if (collinear(bx, by, cx, cy, px, py)) {
+        } else if (orient(bx, by, cx, cy, px, py) === 0) {
             this._handleCollinear(pn, e1);
 
-        } else if (collinear(cx, cy, ax, ay, px, py)) {
+        } else if (orient(cx, cy, ax, ay, px, py) === 0) {
             this._handleCollinear(pn, e2);
 
         } else {
@@ -437,12 +437,8 @@ export default class HeightMesh {
     }
 }
 
-function edge(ax, ay, bx, by, cx, cy) {
+function orient(ax, ay, bx, by, cx, cy) {
     return (bx - cx) * (ay - cy) - (by - cy) * (ax - cx);
-}
-
-function collinear(p0x, p0y, p1x, p1y, p2x, p2y) {
-    return (p1y - p0y) * (p2x - p1x) === (p2y - p1y) * (p1x - p0x);
 }
 
 function inCircle(ax, ay, bx, by, cx, cy, px, py) {
