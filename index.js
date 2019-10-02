@@ -97,7 +97,6 @@ export default class HeightMesh {
         const z2 = this._at(p2x, p2y) / a;
 
         // iterate over pixels in bounding box
-        let numScanned = 0;
         let maxError = 0;
         let mx = 0;
         let my = 0;
@@ -124,7 +123,6 @@ export default class HeightMesh {
                 // check if inside triangle
                 if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
                     wasInside = true;
-                    numScanned++;
 
                     // compute z using barycentric coordinates
                     const z = z0 * w0 + z1 * w1 + z2 * w2;
