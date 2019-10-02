@@ -3,14 +3,46 @@
 <head>
 <title>hmmjs</title>
 <style>
-
-p { margin: 5px 0; }
+body {
+    margin: 0;
+    font: 16px/1.2 "Helvetica Neue", Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+#container { max-width: 500px; }
+/*body {
+    font: 16px/1.3 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+*/h1 {
+    font-size: 32px;
+    font-weight: normal;
+    margin-bottom: 15px;
+}
+p {
+    margin: 0 0 10px;
+}
+#info {
+    font-size: 14px;
+    margin: 5px;
+    color: #666;
+}
+#info code {
+    color: black;
+}
+#controls {
+    margin-top: 20px;
+}
 
 </style>
 </head>
-<body>
+<body><div id="container">
 
-<p>
+<h1>Delatin demo</h1>
+
+<p>A fast JavaScript terrain mesh generation tool. Approximates a height field with a Delaunay triangulation, minimizing the amount of points and triangles for a given maximum error. <strong>GitHub:</strong> <a href="https://github.com/mapbox/delatin">mapbox/delatin</a></p>
+
+<p id="controls">
     <select id="location">
         <option value="11/2014/1267">Mount Taranaki, New Zealand</option>
         <option value="10/906/404">Mount Fuji, Japan</option>
@@ -153,14 +185,14 @@ function frame() {
     const percentTriangles = 100 * numTriangles / tin.data.length / 2;
 
     info.innerHTML = `
-        ${numPoints} points,
-        ${numTriangles} triangles (${percentTriangles.toFixed(2)}%),
-        ${rmse.toFixed(2)}m RMSD,
-        ${error.toFixed(2)}m max error`;
+        <code>${numPoints}</code> points,
+        <code>${numTriangles}</code> triangles (<code>${percentTriangles.toFixed(2)}</code>%),
+        <code>${rmse.toFixed(2)}</code>m RMSD,
+        <code>${error.toFixed(2)}</code>m max error`;
 
     if (error > 0.1) frameId = requestAnimationFrame(frame);
 };
 
 </script>
-</body>
+</div></body>
 </html>
