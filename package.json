@@ -1,5 +1,5 @@
 {
-  "name": "hmmjs",
+  "name": "delatin",
   "version": "1.0.0",
   "description": "JavaScript terrain mesh generation tool",
   "main": "index.js",
@@ -9,11 +9,19 @@
   "eslintConfig": {
     "extends": "mourner"
   },
-  "keywords": ["terrain", "heightmap", "delaunay", "tin", "mesh"],
+  "keywords": [
+    "terrain",
+    "heightmap",
+    "delaunay",
+    "tin",
+    "mesh"
+  ],
   "author": "Vladimir Agafonkin",
   "license": "ISC",
   "devDependencies": {
     "eslint": "^6.5.0",
-    "eslint-config-mourner": "^3.0.0"
+    "eslint-config-mourner": "^3.0.0",
+    "esm": "^3.2.25",
+    "pngjs": "^3.4.0"
   }
 }

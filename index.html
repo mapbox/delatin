@@ -149,12 +149,14 @@ function frame() {
     }
 
     const error = hm._error();
+    const rmse = hm._rmse();
     const numTriangles = hm._queue.length;
     const percentTriangles = 100 * numTriangles / hm.data.length / 2;
 
     info.innerHTML = `
         ${numPoints} points,
         ${numTriangles} triangles (${percentTriangles.toFixed(2)}%),
+        ${rmse.toFixed(2)}m RMSD,
         ${error.toFixed(2)}m max error`;
 
     if (error > 0.1) frameId = requestAnimationFrame(frame);

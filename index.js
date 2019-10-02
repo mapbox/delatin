@@ -34,11 +34,8 @@ export default class HeightMesh {
 
     _rmse() {
         let sum = 0;
-        for (const t of this._queue) {
-            const e = this._errors[t];
-            sum += e * e;
-        }
-        return Math.sqrt(sum / this._queue.length);
+        for (const e of this._errors) sum += e * e;
+        return Math.sqrt(sum / this._errors.length);
     }
 
     _init() {
