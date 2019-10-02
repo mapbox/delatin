@@ -34,7 +34,7 @@ p { margin: 5px 0; }
 
 <script type="module">
 
-import HeightMesh from './index.js';
+import Delatin from './index.js';
 
 const info = document.getElementById('info');
 const speedEl = document.getElementById('speed');
@@ -78,7 +78,7 @@ function onSelect() {
 select.onchange = onSelect;
 onSelect();
 
-let hm;
+let tin;
 
 const tileCoord = '14/2625/6369';
 
@@ -92,8 +92,7 @@ function start() {
         const b = data[4 * i + 2];
         heights[i] = Math.round(((r * 256 * 256 + g * 256.0 + b) / 10.0 - 10000.0) * 10) / 10;
     }
-    hm = window.hm = new HeightMesh(heights, tile.width, tile.height);
-    hm._init();
+    tin = window.tin = new Delatin(heights, tile.width, tile.height);
     frame();
 }
 
@@ -110,24 +109,24 @@ function getImageData(img) {
 
 function frame() {
     const scale = 3 / metersPerPixel;
-    const numPoints = hm._coords.length / 2;
+    const numPoints = tin._coords.length / 2;
     const speed = +speedEl.value;
     const iterations = speed - numPoints % speed;
 
     const pending = [];
     for (let k = 0; k < iterations; k++) {
-        hm._step();
-        for (let i = 0; i < hm._pendingLen; i++) {
-            const t = hm._pending[i];
-            const p0 = 2 * hm._triangles[3 * t + 0];
-            const p1 = 2 * hm._triangles[3 * t + 1];
-            const p2 = 2 * hm._triangles[3 * t + 2];
-            const x0 = hm._coords[p0], y0 = hm._coords[p0 + 1], z0 = hm._at(x0, y0) * scale;
-            const x1 = hm._coords[p1], y1 = hm._coords[p1 + 1], z1 = hm._at(x1, y1) * scale;
-            const x2 = hm._coords[p2], y2 = hm._coords[p2 + 1], z2 = hm._at(x2, y2) * scale;
+        tin._step();
+        for (let i = 0; i < tin._pendingLen; i++) {
+            const t = tin._pending[i];
+            const p0 = 2 * tin._triangles[3 * t + 0];
+            const p1 = 2 * tin._triangles[3 * t + 1];
+            const p2 = 2 * tin._triangles[3 * t + 2];
+            const x0 = tin._coords[p0], y0 = tin._coords[p0 + 1], z0 = tin._at(x0, y0) * scale;
+            const x1 = tin._coords[p1], y1 = tin._coords[p1 + 1], z1 = tin._at(x1, y1) * scale;
+            const x2 = tin._coords[p2], y2 = tin._coords[p2 + 1], z2 = tin._at(x2, y2) * scale;
             pending.push({x0, y0, z0, x1, y1, z1, x2, y2, z2});
         }
-        hm._flush();
+        tin._flush();
     }
 
     for (const {x0, y0, z0, x1, y1, z1, x2, y2, z2} of pending) {
@@ -148,10 +147,10 @@ function frame() {
         ctx.fill();
     }
 
-    const error = hm._error();
-    const rmse = hm._rmse();
-    const numTriangles = hm._queue.length;
-    const percentTriangles = 100 * numTriangles / hm.data.length / 2;
+    const error = tin.getMaxError();
+    const rmse = tin.getRMSD();
+    const numTriangles = tin._queue.length;
+    const percentTriangles = 100 * numTriangles / tin.data.length / 2;
 
     info.innerHTML = `
         ${numPoints} points,

@@ -1,5 +1,5 @@
 
-export default class HeightMesh {
+export default class Delatin {
 
     constructor(data, width, height = width) {
         this.data = data;
@@ -18,21 +18,22 @@ export default class HeightMesh {
         this._queue = []; // queue of added triangles
         this._pending = []; // triangles pending addition to queue
         this._pendingLen = 0;
+
+        this._init();
     }
 
     run(maxError) {
-        this._init();
-        while (this._error() > maxError) {
+        while (this.getMaxError() > maxError) {
             this._step();
             this._flush();
         }
     }
 
-    _error() {
+    getMaxError() {
         return this._errors[this._queue[0]];
     }
 
-    _rmse() {
+    getRMSD() {
         let sum = 0;
         for (const e of this._errors) sum += e * e;
         return Math.sqrt(sum / this._errors.length);

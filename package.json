@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "JavaScript terrain mesh generation tool",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "eslint *.js"
+    "pretest": "eslint index.js test/test.js",
+    "test": "node -r esm test/test.js"
   },
   "eslintConfig": {
     "extends": "mourner"
@@ -19,9 +21,10 @@
   "author": "Vladimir Agafonkin",
   "license": "ISC",
   "devDependencies": {
-    "eslint": "^6.5.0",
+    "eslint": "^6.5.1",
     "eslint-config-mourner": "^3.0.0",
     "esm": "^3.2.25",
-    "pngjs": "^3.4.0"
+    "pngjs": "^3.4.0",
+    "tape": "^4.11.0"
   }
 }
