@@ -2,7 +2,7 @@
 export default class Delatin {
 
     constructor(data, width, height = width) {
-        this.data = data;
+        this.data = data; // height data
         this.width = width;
         this.height = height;
 
@@ -22,6 +22,7 @@ export default class Delatin {
         this._init();
     }
 
+    // refine mesh until maximum error gets below the given one
     run(maxError = 1) {
         while (this.getMaxError() > maxError) {
             this._step();
@@ -29,16 +30,19 @@ export default class Delatin {
         }
     }
 
+    // max error of the current mesh
     getMaxError() {
         return this._errors[this._queue[0]];
     }
 
+    // root-mean-square deviation of the current mesh
     getRMSD() {
         let sum = 0;
         for (const e of this._errors) sum += e * e;
         return Math.sqrt(sum / this._errors.length);
     }
 
+    // height value at a given position
     heightAt(x, y) {
         return this.data[this.width * y + x];
     }
@@ -57,6 +61,7 @@ export default class Delatin {
         this._flush();
     }
 
+    // rasterize and queue all triangles that got added or updated in _step
     _flush() {
         const coords = this.coords;
         for (let i = 0; i < this._pendingLen; i++) {
@@ -70,6 +75,7 @@ export default class Delatin {
         this._pendingLen = 0;
     }
 
+    // rasterize a triangle, find its max error, and queue it for processing
     _findCandidate(p0x, p0y, p1x, p1y, p2x, p2y, t) {
         // triangle bounding box
         const minX = Math.min(p0x, p1x, p2x);
@@ -148,7 +154,7 @@ export default class Delatin {
             maxError = 0;
         }
 
-        // update metadata
+        // update triangle metadata
         this._candidates[2 * t] = mx;
         this._candidates[2 * t + 1] = my;
 
@@ -158,6 +164,7 @@ export default class Delatin {
         this._queuePush(t);
     }
 
+    // process the next triangle in the queue, splitting it with a new point
     _step() {
         // pop triangle with highest error from priority queue
         const t = this._queuePop();
@@ -205,12 +212,14 @@ export default class Delatin {
         }
     }
 
+    // add coordinates for a new vertex
     _addPoint(x, y) {
         const i = this.coords.length >> 1;
         this.coords.push(x, y);
         return i;
     }
 
+    // add or update a triangle in the mesh
     _addTriangle(a, b, c, ab, bc, ca, e = this.triangles.length) {
         const t = e / 3; // new triangle index
 
@@ -305,6 +314,7 @@ export default class Delatin {
         this._legalize(t1 + 2);
     }
 
+    // handle a case where new vertex is on the edge of a triangle
     _handleCollinear(pn, a) {
         const a0 = a - a % 3;
         const al = a0 + (a + 1) % 3;
