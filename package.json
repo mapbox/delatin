@@ -1,13 +1,17 @@
 {
   "name": "delatin",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "JavaScript terrain mesh generation tool",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "pretest": "eslint index.js test/test.js",
-    "test": "node -r esm test/test.js"
+    "test": "node -r esm test/test.js",
+    "prepublishOnly": "npm run test"
   },
+  "files": [
+    "index.js"
+  ],
   "eslintConfig": {
     "extends": "mourner"
   },
