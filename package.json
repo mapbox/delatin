@@ -1,6 +1,6 @@
 {
   "name": "delatin",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "JavaScript terrain mesh generation tool",
   "main": "index.js",
   "type": "module",
