@@ -5,8 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "pretest": "eslint index.js test/test.js",
+    "pretest": "eslint index.js bench.js test/test.js",
     "test": "node -r esm test/test.js",
+    "bench": "node -r esm bench.js",
     "prepublishOnly": "npm run test"
   },
   "files": [
