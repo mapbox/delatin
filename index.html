@@ -143,14 +143,16 @@ function getImageData(img) {
     return ctx.getImageData(0, 0, img.width, img.height).data;
 }
 
+const minError = 0.1;
+
 function frame() {
     const scale = 3 / metersPerPixel;
-    const numPoints = tin.coords.length / 2;
     const speed = +speedEl.value;
-    const iterations = speed - numPoints % speed;
+    const iterations = speed - (tin.coords.length >> 1) % speed;
 
     const pending = [];
     for (let k = 0; k < iterations; k++) {
+        // use private methods for incremental drawing of updated triangles
         tin._step();
         for (let i = 0; i < tin._pendingLen; i++) {
             const t = tin._pending[i];
@@ -163,6 +165,7 @@ function frame() {
             pending.push({x0, y0, z0, x1, y1, z1, x2, y2, z2});
         }
         tin._flush();
+        if (tin.getMaxError() <= minError) break;
     }
 
     for (const {x0, y0, z0, x1, y1, z1, x2, y2, z2} of pending) {
@@ -183,9 +186,10 @@ function frame() {
         ctx.fill();
     }
 
+    const numPoints = tin.coords.length >> 1;
     const error = tin.getMaxError();
     const rmse = tin.getRMSD();
-    const numTriangles = tin._queue.length;
+    const numTriangles = tin.triangles.length / 3;
     const percentTriangles = 100 * numTriangles / tin.data.length / 2;
 
     info.innerHTML = `
@@ -194,7 +198,7 @@ function frame() {
         <code>${rmse.toFixed(2)}</code>m RMSD,
         <code>${error.toFixed(2)}</code>m max error`;
 
-    if (error > 0.1) frameId = requestAnimationFrame(frame);
+    if (error > minError) frameId = requestAnimationFrame(frame);
 };
 
 </script>

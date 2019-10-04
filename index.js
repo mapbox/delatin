@@ -20,7 +20,18 @@ export default class Delatin {
         this._pendingLen = 0;
 
         this._rmsdSum = 0;
-        this._init();
+
+        const x1 = width - 1;
+        const y1 = height - 1;
+        const p0 = this._addPoint(0, 0);
+        const p1 = this._addPoint(x1, 0);
+        const p2 = this._addPoint(0, y1);
+        const p3 = this._addPoint(x1, y1);
+
+        // add initial two triangles
+        const t0 = this._addTriangle(p3, p0, p2, -1, -1, -1);
+        this._addTriangle(p0, p3, p1, t0, -1, -1);
+        this._flush();
     }
 
     // refine the mesh until its maximum error gets below the given one
@@ -43,26 +54,12 @@ export default class Delatin {
 
     // root-mean-square deviation of the current mesh
     getRMSD() {
-        return Math.sqrt(this._rmsdSum / this._errors.length);
+        return this._rmsdSum > 0 ? Math.sqrt(this._rmsdSum / this._errors.length) : 0;
     }
 
     // height value at a given position
     heightAt(x, y) {
         return this.data[this.width * y + x];
-    }
-
-    _init() {
-        const x1 = this.width - 1;
-        const y1 = this.height - 1;
-        const p0 = this._addPoint(0, 0);
-        const p1 = this._addPoint(x1, 0);
-        const p2 = this._addPoint(0, y1);
-        const p3 = this._addPoint(x1, y1);
-
-        // add initial two triangles
-        const t0 = this._addTriangle(p3, p0, p2, -1, -1, -1);
-        this._addTriangle(p0, p3, p1, t0, -1, -1);
-        this._flush();
     }
 
     // rasterize and queue all triangles that got added or updated in _step
