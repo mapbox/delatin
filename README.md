@@ -50,3 +50,14 @@ After running mesh refinement, this will be an array of `x, y` vertex coordinate
 #### `tin.triangles`
 
 After running mesh refinement, this will be an an array of triangle indices of the final mesh. Each triple of numbers defines a triangle and references vertices in the `tin.coords` array.
+
+## Install
+
+Run `npm install delatin` or `yarn add delatin`. Delatin is exposed as a ES module, so you can use it like this in modern browsers:
+
+```html
+<script type="module">
+import Delatin from 'https://unpkg.com/delatin';
+```
+
+To use ES modules in Node, either use [esm](https://github.com/standard-things/esm) (`node -r esm app.js`), or `node --experimental-modules app.js` for Node v12+.

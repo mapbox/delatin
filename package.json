@@ -3,15 +3,19 @@
   "version": "0.1.0",
   "description": "JavaScript terrain mesh generation tool",
   "main": "index.js",
+  "module": "index.js",
   "type": "module",
+  "unpkg": "delatin.min.js",
   "scripts": {
     "pretest": "eslint index.js bench.js test/test.js",
     "test": "node -r esm test/test.js",
     "bench": "node -r esm bench.js",
-    "prepublishOnly": "npm run test"
+    "build": "terser -c -m -- index.js > delatin.min.js",
+    "prepublishOnly": "npm run test && npm run build"
   },
   "files": [
-    "index.js"
+    "index.js",
+    "delatin.min.js"
   ],
   "eslintConfig": {
     "extends": "mourner"
@@ -30,6 +34,7 @@
     "eslint-config-mourner": "^3.0.0",
     "esm": "^3.2.25",
     "pngjs": "^3.4.0",
-    "tape": "^4.11.0"
+    "tape": "^4.11.0",
+    "terser": "^4.3.4"
   }
 }
