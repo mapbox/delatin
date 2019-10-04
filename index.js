@@ -12,10 +12,10 @@ export default class Delatin {
         // additional triangle data
         this._halfedges = [];
         this._candidates = [];
-        this._errors = [];
         this._queueIndices = [];
 
         this._queue = []; // queue of added triangles
+        this._errors = [];
         this._pending = []; // triangles pending addition to queue
         this._pendingLen = 0;
 
@@ -37,7 +37,7 @@ export default class Delatin {
 
     // max error of the current mesh
     getMaxError() {
-        return this._errors[this._queue[0]];
+        return this._errors[0];
     }
 
     // root-mean-square deviation of the current mesh
@@ -163,10 +163,8 @@ export default class Delatin {
         this._candidates[2 * t] = mx;
         this._candidates[2 * t + 1] = my;
 
-        this._errors[t] = maxError;
-
         // add triangle to priority queue
-        this._queuePush(t);
+        this._queuePush(t, maxError);
     }
 
     // process the next triangle in the queue, splitting it with a new point
@@ -252,7 +250,6 @@ export default class Delatin {
         // init triangle metadata
         this._candidates[2 * t + 0] = 0;
         this._candidates[2 * t + 1] = 0;
-        this._errors[t] = 0;
         this._queueIndices[t] = -1;
 
         // add triangle to pending queue for later rasterization
@@ -362,10 +359,11 @@ export default class Delatin {
 
     // priority queue methods
 
-    _queuePush(t) {
+    _queuePush(t, error) {
         const i = this._queue.length;
         this._queueIndices[t] = i;
         this._queue.push(t);
+        this._errors.push(error);
         this._queueUp(i);
     }
 
@@ -378,6 +376,7 @@ export default class Delatin {
 
     _queuePopBack() {
         const t = this._queue.pop();
+        this._errors.pop();
         this._queueIndices[t] = -1;
         return t;
     }
@@ -404,7 +403,7 @@ export default class Delatin {
     }
 
     _queueLess(i, j) {
-        return this._errors[this._queue[i]] > this._errors[this._queue[j]];
+        return this._errors[i] > this._errors[j];
     }
 
     _queueSwap(i, j) {
@@ -414,6 +413,9 @@ export default class Delatin {
         this._queue[j] = pi;
         this._queueIndices[pi] = j;
         this._queueIndices[pj] = i;
+        const e = this._errors[i];
+        this._errors[i] = this._errors[j];
+        this._errors[j] = e;
     }
 
     _queueUp(j0) {
