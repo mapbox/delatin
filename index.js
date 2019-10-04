@@ -19,6 +19,7 @@ export default class Delatin {
         this._pending = []; // triangles pending addition to queue
         this._pendingLen = 0;
 
+        this._rmsdSum = 0;
         this._init();
     }
 
@@ -42,9 +43,7 @@ export default class Delatin {
 
     // root-mean-square deviation of the current mesh
     getRMSD() {
-        let sum = 0;
-        for (const e of this._errors) sum += e * e;
-        return Math.sqrt(sum / this._errors.length);
+        return Math.sqrt(this._rmsdSum / this._errors.length);
     }
 
     // height value at a given position
@@ -364,6 +363,7 @@ export default class Delatin {
         this._queueIndices[t] = i;
         this._queue.push(t);
         this._errors.push(error);
+        this._rmsdSum += error * error;
         this._queueUp(i);
     }
 
@@ -376,7 +376,8 @@ export default class Delatin {
 
     _queuePopBack() {
         const t = this._queue.pop();
-        this._errors.pop();
+        const e = this._errors.pop();
+        this._rmsdSum -= e * e;
         this._queueIndices[t] = -1;
         return t;
     }
