@@ -27,6 +27,10 @@ Creates a new Delatin instance given a height field in the form of a flat array 
 
 Performs mesh refinement until maximum error reaches below the given `maxError`. You can do this multiple times with successively smaller `maxError`.
 
+#### `tin.refine()`
+
+Runs a single iteration of mesh refinement, adding a single point to the mesh. Useful when generating the mesh with custom stop conditions (e.g. maximum number of points or triangles).
+
 #### `tin.getMaxError()`
 
 Returns the current maximum error of the mesh, defined by the maximum vertical distance between a point in the original height field and its triangular approximation.

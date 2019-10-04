@@ -22,12 +22,17 @@ export default class Delatin {
         this._init();
     }
 
-    // refine mesh until maximum error gets below the given one
+    // refine the mesh until its maximum error gets below the given one
     run(maxError = 1) {
         while (this.getMaxError() > maxError) {
-            this._step();
-            this._flush();
+            this.refine();
         }
+    }
+
+    // refine the mesh with a single point
+    refine() {
+        this._step();
+        this._flush();
     }
 
     // max error of the current mesh
