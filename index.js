@@ -16,10 +16,11 @@ export default class Delatin {
 
         this._queue = []; // queue of added triangles
         this._errors = [];
+        this._rms = [];
         this._pending = []; // triangles pending addition to queue
         this._pendingLen = 0;
 
-        this._rmsdSum = 0;
+        this._rmsSum = 0;
 
         const x1 = width - 1;
         const y1 = height - 1;
@@ -54,7 +55,7 @@ export default class Delatin {
 
     // root-mean-square deviation of the current mesh
     getRMSD() {
-        return this._rmsdSum > 0 ? Math.sqrt(this._rmsdSum / this._errors.length) : 0;
+        return this._rmsSum > 0 ? Math.sqrt(this._rmsSum / (this.width * this.height)) : 0;
     }
 
     // height value at a given position
@@ -105,6 +106,7 @@ export default class Delatin {
         let maxError = 0;
         let mx = 0;
         let my = 0;
+        let rms = 0;
         for (let y = minY; y <= maxY; y++) {
             // compute starting offset
             let dx = 0;
@@ -132,6 +134,7 @@ export default class Delatin {
                     // compute z using barycentric coordinates
                     const z = z0 * w0 + z1 * w1 + z2 * w2;
                     const dz = Math.abs(z - this.heightAt(x, y));
+                    rms += dz * dz;
                     if (dz > maxError) {
                         maxError = dz;
                         mx = x;
@@ -158,9 +161,10 @@ export default class Delatin {
         // update triangle metadata
         this._candidates[2 * t] = mx;
         this._candidates[2 * t + 1] = my;
+        this._rms[t] = rms;
 
         // add triangle to priority queue
-        this._queuePush(t, maxError);
+        this._queuePush(t, maxError, rms);
     }
 
     // process the next triangle in the queue, splitting it with a new point
@@ -247,6 +251,7 @@ export default class Delatin {
         this._candidates[2 * t + 0] = 0;
         this._candidates[2 * t + 1] = 0;
         this._queueIndices[t] = -1;
+        this._rms[t] = 0;
 
         // add triangle to pending queue for later rasterization
         this._pending[this._pendingLen++] = t;
@@ -355,12 +360,12 @@ export default class Delatin {
 
     // priority queue methods
 
-    _queuePush(t, error) {
+    _queuePush(t, error, rms) {
         const i = this._queue.length;
         this._queueIndices[t] = i;
         this._queue.push(t);
         this._errors.push(error);
-        this._rmsdSum += error * error;
+        this._rmsSum += rms;
         this._queueUp(i);
     }
 
@@ -373,8 +378,8 @@ export default class Delatin {
 
     _queuePopBack() {
         const t = this._queue.pop();
-        const e = this._errors.pop();
-        this._rmsdSum -= e * e;
+        this._errors.pop();
+        this._rmsSum -= this._rms[t];
         this._queueIndices[t] = -1;
         return t;
     }
