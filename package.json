@@ -15,6 +15,7 @@
   },
   "files": [
     "index.js",
+    "index.d.ts",
     "delatin.min.js"
   ],
   "eslintConfig": {
