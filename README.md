@@ -1,4 +1,4 @@
-# delatin [![Build Status](https://travis-ci.com/mapbox/delatin.svg?branch=master)](https://travis-ci.com/mapbox/delatin) [![Vlad's projects](https://img.shields.io/badge/simply-awesome-brightgreen.svg)](https://github.com/mourner/projects)
+# delatin [![Vlad's projects](https://img.shields.io/badge/simply-awesome-brightgreen.svg)](https://github.com/mourner/projects)
 
 A fast JavaScript **3D terrain mesh** generation tool. Approximates a height field with a Delaunay triangulation, minimizing the amount of points and triangles for a given maximum error.
 
@@ -11,6 +11,8 @@ Delatin is a port of Michael Fogleman's [*hmm*](https://github.com/fogleman/hmm)
 ## Example
 
 ```js
+import Delatin from 'delatin';
+
 const tin = new Delatin(heightValues, width, height);
 
 tin.run(0.3); // run mesh refinement until max error is less than 0.3

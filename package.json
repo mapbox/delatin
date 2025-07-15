@@ -4,23 +4,18 @@
   "description": "JavaScript terrain mesh generation tool",
   "main": "index.js",
   "module": "index.js",
+  "exports": "./index.js",
   "type": "module",
-  "unpkg": "delatin.min.js",
   "scripts": {
     "pretest": "eslint index.js bench.js test/test.js",
-    "test": "node -r esm test/test.js",
-    "bench": "node -r esm bench.js",
-    "build": "terser -c -m -- index.js > delatin.min.js",
-    "prepublishOnly": "npm run test && npm run build"
+    "test": "node test/test.js",
+    "bench": "node bench.js",
+    "prepublishOnly": "npm run test"
   },
   "files": [
     "index.js",
-    "index.d.ts",
-    "delatin.min.js"
+    "index.d.ts"
   ],
-  "eslintConfig": {
-    "extends": "mourner"
-  },
   "keywords": [
     "terrain",
     "heightmap",
@@ -31,11 +26,8 @@
   "author": "Vladimir Agafonkin",
   "license": "ISC",
   "devDependencies": {
-    "eslint": "^6.8.0",
-    "eslint-config-mourner": "^3.0.0",
-    "esm": "^3.2.25",
-    "pngjs": "^3.4.0",
-    "tape": "^4.13.2",
-    "terser": "^4.6.11"
+    "eslint": "^9.31.0",
+    "eslint-config-mourner": "^4.0.2",
+    "pngjs": "^7.0.0"
   }
 }
